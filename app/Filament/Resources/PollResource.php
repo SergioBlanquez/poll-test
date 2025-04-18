@@ -79,6 +79,11 @@ class PollResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('answers')
+                    ->color('success')
+                    ->icon('heroicon-o-chart-bar')
+                    ->url(fn ($record) => route('filament.admin.resources.polls.answers', $record->id)),
+
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -100,6 +105,7 @@ class PollResource extends Resource
             'index' => Pages\ListPolls::route('/'),
             'create' => Pages\CreatePoll::route('/create'),
             'edit' => Pages\EditPoll::route('/{record}/edit'),
+            'answers' => Pages\Answers::route('/{record}/answers'),
         ];
     }
 }

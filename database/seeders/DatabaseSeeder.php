@@ -87,10 +87,50 @@ class DatabaseSeeder extends Seeder
                     2 => QuestionType::PERCENTAGE,
                 };
 
-                $questionTitle = match($type) {
-                    QuestionType::BOOLEAN => $booleanQuestions[array_rand($booleanQuestions)],
-                    QuestionType::TEXT => $textQuestions[array_rand($textQuestions)],
-                    QuestionType::PERCENTAGE => $percentageQuestions[array_rand($percentageQuestions)],
+                // Obtener el array de preguntas correspondiente
+                $questionsArray = match($type) {
+                    QuestionType::BOOLEAN => $booleanQuestions,
+                    QuestionType::TEXT => $textQuestions,
+                    QuestionType::PERCENTAGE => $percentageQuestions,
+                };
+
+                // Si el array está vacío, reiniciarlo con las preguntas originales
+                if (empty($questionsArray)) {
+                    $questionsArray = match($type) {
+                        QuestionType::BOOLEAN => [
+                            '¿Está satisfecho con nuestro servicio?',
+                            '¿Recomendaría nuestro producto a otros?',
+                            '¿El producto cumplió con sus expectativas?',
+                            '¿El servicio fue rápido y eficiente?',
+                            '¿Encontró lo que estaba buscando?'
+                        ],
+                        QuestionType::TEXT => [
+                            '¿Qué aspectos mejorarías de nuestro servicio?',
+                            '¿Qué te gustó más del producto?',
+                            '¿Cómo describirías tu experiencia?',
+                            '¿Qué sugerencias tienes para mejorar?',
+                            '¿Qué te motivó a elegirnos?'
+                        ],
+                        QuestionType::PERCENTAGE => [
+                            '¿Qué tan satisfecho está con la atención recibida?',
+                            '¿Qué tan probable es que vuelva a comprar?',
+                            '¿Qué tan bien se ajusta el producto a sus necesidades?',
+                            '¿Qué tan rápido fue resuelto su problema?',
+                            '¿Qué tan fácil fue usar nuestro servicio?'
+                        ],
+                    };
+                }
+
+                // Seleccionar una pregunta aleatoria
+                $randomKey = array_rand($questionsArray);
+                $questionTitle = $questionsArray[$randomKey];
+                unset($questionsArray[$randomKey]);
+
+                // Actualizar el array original
+                match($type) {
+                    QuestionType::BOOLEAN => $booleanQuestions = $questionsArray,
+                    QuestionType::TEXT => $textQuestions = $questionsArray,
+                    QuestionType::PERCENTAGE => $percentageQuestions = $questionsArray,
                 };
 
                 Poll_Question::create([
@@ -100,6 +140,26 @@ class DatabaseSeeder extends Seeder
                     'required' => fake()->boolean(70), // 70% de probabilidad de ser requerido
                     'options' => $type === QuestionType::PERCENTAGE ? json_encode(['min' => 0, 'max' => 100]) : null,
                 ]);
+            }
+
+            // Generar 20 respuestas para cada pregunta de la encuesta
+            $questions = Poll_Question::where('poll_id', $poll->id)->get();
+            $users = User::where('poll_creator', false)->get()->random(20);
+
+            foreach ($questions as $question) {
+                foreach ($users as $user) {
+                    $answer = match($question->type) {
+                        QuestionType::BOOLEAN => fake()->boolean(),
+                        QuestionType::TEXT => fake()->sentence(),
+                        QuestionType::PERCENTAGE => fake()->numberBetween(0, 100),
+                    };
+
+                    \App\Models\Poll_Question_Answer::create([
+                        'poll__question_id' => $question->id,
+                        'user_id' => $user->id,
+                        'answer' => $answer,
+                    ]);
+                }
             }
         }
     }
