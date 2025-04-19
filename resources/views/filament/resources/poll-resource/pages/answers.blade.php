@@ -7,26 +7,34 @@
             {{ $this->record->description }}
         </p>
         {{-- {{dd($this->record->poll_questions)}} --}}
+
+        <!-- Gráficos de barras de ancho completo -->
+        @foreach($this->record->poll_questions as $question)
+            @if($question->type === \App\Enums\QuestionType::PERCENTAGE)
+                <x-filament::section>
+                    <x-slot name="heading">
+                        {{ $question->title }}
+                    </x-slot>
+                    <livewire:perc-chart :question="$question" :key="$question->id" />
+                </x-filament::section>
+            @endif
+        @endforeach
+
+        <!-- Gráficos booleanos en grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             @foreach($this->record->poll_questions as $question)
-                @if($question->type !== \App\Enums\QuestionType::TEXT)
+                @if($question->type === \App\Enums\QuestionType::BOOLEAN)
                     <x-filament::section>
                         <x-slot name="heading">
                             {{ $question->title }}
                         </x-slot>
-                        @if($question->type === \App\Enums\QuestionType::BOOLEAN)
-                            {{-- <livewire:charts.boolean-chart :question="$question" :key="$question->id" /> --}}
-                            <p>boolean</p>
-
-                        @elseif($question->type === \App\Enums\QuestionType::PERCENTAGE)
-                            {{-- <livewire:charts.percentage-bar-chart :question="$question" :key="$question->id" /> --}}
-                            <p>percentage</p>
-                        @endif
+                        <livewire:boolean-chart :question="$question" :key="$question->id" />
                     </x-filament::section>
                 @endif
             @endforeach
         </div>
 
+        <!-- Tablas de texto -->
         @foreach($this->record->poll_questions as $question)
             @if($question->type === \App\Enums\QuestionType::TEXT)
                 <x-filament::section>
@@ -41,3 +49,5 @@
         @endforeach
     </div>
 </x-filament-panels::page>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
